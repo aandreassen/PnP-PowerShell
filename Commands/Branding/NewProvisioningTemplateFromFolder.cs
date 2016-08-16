@@ -1,55 +1,54 @@
 ﻿using OfficeDevPnP.Core.Framework.Provisioning.Model;
 using OfficeDevPnP.Core.Framework.Provisioning.Providers;
 using OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml;
-using OfficeDevPnP.PowerShell.CmdletHelpAttributes;
-using OfficeDevPnP.PowerShell.Commands.Base.PipeBinds;
+using SharePointPnP.PowerShell.CmdletHelpAttributes;
+using SharePointPnP.PowerShell.Commands.Base.PipeBinds;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Xml.Linq;
+using OfficeDevPnP.Core.Framework.Provisioning.Connectors.OpenXML;
+using OfficeDevPnP.Core.Framework.Provisioning.Connectors.OpenXML.Model;
 
-namespace OfficeDevPnP.PowerShell.Commands.Branding
+namespace SharePointPnP.PowerShell.Commands.Branding
 {
     [Cmdlet(VerbsCommon.New, "SPOProvisioningTemplateFromFolder")]
     [CmdletHelp("Generates a provisioning template from a given folder, including only files that are present in that folder",
         Category = CmdletHelpCategory.Branding)]
     [CmdletExample(
-       Code = @"
-    PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml
-",
+       Code = @"PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml",
        Remarks = "Creates an empty provisioning template, and includes all files in the current folder.",
        SortOrder = 1)]
     [CmdletExample(
-       Code = @"
-    PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml -Folder c:\temp
-",
+       Code = @"PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml -Folder c:\temp",
        Remarks = "Creates an empty provisioning template, and includes all files in the c:\\temp folder.",
        SortOrder = 2)]
     [CmdletExample(
-       Code = @"
-    PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml -Folder c:\temp -Match *.js
-",
+       Code = @"PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml -Folder c:\temp -Match *.js",
        Remarks = "Creates an empty provisioning template, and includes all files with a JS extension in the c:\\temp folder.",
        SortOrder = 3)]
     [CmdletExample(
-       Code = @"
-    PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml -Folder c:\temp -Match *.js -TargetFolder ""Shared Documents""",
+       Code = @"PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml -Folder c:\temp -Match *.js -TargetFolder ""Shared Documents""",
        Remarks = "Creates an empty provisioning template, and includes all files with a JS extension in the c:\\temp folder and marks the files in the template to be added to the 'Shared Documents' folder",
        SortOrder = 4)]
-
     [CmdletExample(
-       Code = @"
-    PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml -Folder c:\temp -Match *.js -TargetFolder ""Shared Documents"" -ContentType ""Test Content Type""",
+       Code = @"PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml -Folder c:\temp -Match *.js -TargetFolder ""Shared Documents"" -ContentType ""Test Content Type""",
        Remarks = "Creates an empty provisioning template, and includes all files with a JS extension in the c:\\temp folder and marks the files in the template to be added to the 'Shared Documents' folder. It will add a property to the item for the content type.",
        SortOrder = 5)]
-
     [CmdletExample(
-       Code = @"
-    PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml -Folder c:\temp -Match *.js -TargetFolder ""Shared Documents"" -Properties @{""Title"" = ""Test Title""; ""Category""=""Test Category""}",
+       Code = @"PS:> New-SPOProvisioningTemplateFromFolder -Out template.xml -Folder c:\temp -Match *.js -TargetFolder ""Shared Documents"" -Properties @{""Title"" = ""Test Title""; ""Category""=""Test Category""}",
        Remarks = "Creates an empty provisioning template, and includes all files with a JS extension in the c:\\temp folder and marks the files in the template to be added to the 'Shared Documents' folder. It will add the specified properties to the file entries.",
        SortOrder = 6)]
+    [CmdletExample(
+       Code = @"PS:> New-SPOProvisioningTemplateFromFolder -Out template.pnp",
+       Remarks = "Creates an empty provisioning template as a pnp package file, and includes all files in the current folder",
+       SortOrder = 7)]
+    [CmdletExample(
+       Code = @"PS:> New-SPOProvisioningTemplateFromFolder -Out template.pnp -Folder c:\temp",
+       Remarks = "Creates an empty provisioning template as a pnp package file, and includes all files in the c:\\temp folder",
+       SortOrder = 8)]
 
     public class NewProvisioningTemplateFromFolder : SPOWebCmdlet
     {
@@ -95,6 +94,7 @@ namespace OfficeDevPnP.PowerShell.Commands.Branding
                 if (!Path.IsPathRooted(Folder))
                 {
                     Folder = Path.Combine(SessionState.Path.CurrentFileSystemLocation.Path, Folder);
+                    Folder = new DirectoryInfo(Folder).FullName.TrimEnd('\\', '/'); // normalize away relative ./ paths
                 }
             }
             if (ContentType != null)
@@ -105,78 +105,116 @@ namespace OfficeDevPnP.PowerShell.Commands.Branding
             {
                 TargetFolder = new DirectoryInfo(SessionState.Path.CurrentFileSystemLocation.Path).Name;
             }
+
             if (!string.IsNullOrEmpty(Out))
             {
-                if (!Path.IsPathRooted(Out))
+                if (!ShouldContinue()) return;
+
+                if (Path.GetExtension(Out).ToLower() == ".pnp")
                 {
-                    Out = Path.Combine(SessionState.Path.CurrentFileSystemLocation.Path, Out);
-                }
-                if (System.IO.File.Exists(Out))
-                {
-                    if (Force || ShouldContinue(string.Format(Commands.Properties.Resources.File0ExistsOverwrite, Out), Commands.Properties.Resources.Confirm))
-                    {
-
-                        var xml = GetFiles(Schema, new FileInfo(Out).DirectoryName, Folder, ct != null ? ct.StringId : null);
-
-                        if(AsIncludeFile)
-                        {
-                            XElement xElement = XElement.Parse(xml);
-                            // Get the Files Element
-                            XNamespace pnp = XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_12;
-
-                            var filesElement = xElement.Descendants(pnp + "Files").FirstOrDefault();
-
-                            if (filesElement != null)
-                            {
-                                xml = filesElement.ToString();
-                            }
-                        }
-                        System.IO.File.WriteAllText(Out, xml, Encoding);
-                    }
+                    byte[] pack = CreatePnPPackageFile(ct?.StringId);
+                    System.IO.File.WriteAllBytes(Out, pack);
                 }
                 else
                 {
-                    var xml = GetFiles(Schema, new FileInfo(Out).DirectoryName, Folder, ct != null ? ct.StringId : null);
-                    if (AsIncludeFile)
-                    {
-                        XElement xElement = XElement.Parse(xml);
-                        // Get the Files Element
-                        XNamespace pnp = XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_12;
-
-                        var filesElement = xElement.Descendants(pnp + "Files").FirstOrDefault();
-
-                        if (filesElement != null)
-                        {
-                            xml = filesElement.ToString();
-                        }
-                    }
+                    var xml = CreateXmlAsStringFrom(ct?.StringId);
                     System.IO.File.WriteAllText(Out, xml, Encoding);
                 }
             }
             else
             {
-                var xml = GetFiles(Schema, SessionState.Path.CurrentFileSystemLocation.Path, Folder, ct != null ? ct.StringId : null);
-                if (AsIncludeFile)
-                {
-                    XElement xElement = XElement.Parse(xml);
-                    // Get the Files Element
-                    XNamespace pnp = XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_12;
-
-                    var filesElement = xElement.Descendants(pnp + "Files").FirstOrDefault();
-
-                    if (filesElement != null)
-                    {
-                        xml = filesElement.ToString();
-                    }
-                }
+                var xml = CreateXmlAsStringFrom(ct?.StringId);
                 WriteObject(xml);
             }
-
         }
 
-        private string GetFiles(XMLPnPSchemaVersion schema, string path, string folder, string ctid)
+        private bool ShouldContinue()
         {
+            if (!Path.IsPathRooted(Out))
+            {
+                Out = Path.Combine(SessionState.Path.CurrentFileSystemLocation.Path, Out);
+            }
 
+            bool shouldContinue = true;
+            if (System.IO.File.Exists(Out))
+            {
+                shouldContinue = (Force ||
+                                  ShouldContinue(string.Format(Commands.Properties.Resources.File0ExistsOverwrite, Out),
+                                      Commands.Properties.Resources.Confirm));
+            }
+            return shouldContinue;
+        }
+
+        private byte[] CreatePnPPackageFile(string ctId)
+        {
+            PnPInfo info = new PnPInfo
+            {
+                Manifest = new PnPManifest()
+                {
+                    Type = PackageType.Full
+                },
+                Properties = new PnPProperties()
+                {
+                    Generator = OfficeDevPnP.Core.Utilities.PnPCoreUtilities.PnPCoreVersionTag,
+                    Author = string.Empty,
+                },
+                Files = new List<PnPFileInfo>()
+            };
+            DirectoryInfo dirInfo = new DirectoryInfo(Path.GetFullPath(Folder));
+            string templateFileName = Path.GetFileNameWithoutExtension(Out) + ".xml";
+            var xml = CreateXmlAsStringFrom(ctId);
+            PnPFileInfo templateInfo = new PnPFileInfo
+            {
+                InternalName = templateFileName.AsInternalFilename(),
+                OriginalName = templateFileName,
+                Folder = "",
+                Content = System.Text.Encoding.UTF8.GetBytes(xml)
+            };
+            info.Files.Add(templateInfo);
+
+            foreach (var currentFile in dirInfo.GetFiles("*.*", SearchOption.AllDirectories))
+            {
+                var folder = GetFolderName(currentFile, dirInfo);
+                PnPFileInfo fileInfo = new PnPFileInfo
+                {
+                    InternalName = currentFile.Name.AsInternalFilename(),
+                    OriginalName = currentFile.Name,
+                    Folder = folder,
+                    Content = System.IO.File.ReadAllBytes(currentFile.FullName)
+                };
+                WriteVerbose("Adding file:" + currentFile.Name + " - " + folder);
+                info.Files.Add(fileInfo);
+            }
+            byte[] pack = info.PackTemplate().ToArray();
+            return pack;
+        }
+
+        private string GetFolderName(FileInfo currentFile, DirectoryInfo rootFolderInfo)
+        {
+            var fileFolder = currentFile.DirectoryName ?? string.Empty;
+            fileFolder = fileFolder.Replace('\\', '/').Replace(' ', '_');
+            var rootFolder = rootFolderInfo.FullName.Replace('\\', '/').Replace(' ', '_').TrimEnd('/');
+            return fileFolder.Replace(rootFolder, "");
+        }
+
+        private string CreateXmlAsStringFrom(string ctId)
+        {
+            var xml = GetFiles(Schema, Folder, ctId);
+            if (!AsIncludeFile) return xml;
+            XElement xElement = XElement.Parse(xml);
+            // Get the Files Element
+            XNamespace pnp = XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_12;
+
+            var filesElement = xElement.Descendants(pnp + "Files").FirstOrDefault();
+            if (filesElement != null)
+            {
+                xml = filesElement.ToString();
+            }
+            return xml;
+        }
+
+        private string GetFiles(XMLPnPSchemaVersion schema, string folder, string ctid)
+        {
             ProvisioningTemplate template = new ProvisioningTemplate();
             template.Id = "FOLDEREXPORT";
             template.Security = null;
@@ -185,6 +223,15 @@ namespace OfficeDevPnP.PowerShell.Commands.Branding
 
             template.Files.AddRange(EnumerateFiles(folder, ctid, Properties));
 
+            var formatter = GetTemplateFormatterFromSchema(schema);
+            var _outputStream = formatter.ToFormattedTemplate(template);
+            StreamReader reader = new StreamReader(_outputStream);
+
+            return reader.ReadToEnd();
+        }
+
+        private static ITemplateFormatter GetTemplateFormatterFromSchema(XMLPnPSchemaVersion schema)
+        {
             ITemplateFormatter formatter = null;
             switch (schema)
             {
@@ -202,7 +249,9 @@ namespace OfficeDevPnP.PowerShell.Commands.Branding
                     }
                 case XMLPnPSchemaVersion.V201505:
                     {
+#pragma warning disable CS0618 // Type or member is obsolete
                         formatter = XMLPnPSchemaFormatter.GetSpecificFormatter(XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_05);
+#pragma warning disable CS0618 // Type or member is obsolete
                         break;
                     }
                 case XMLPnPSchemaVersion.V201508:
@@ -210,16 +259,19 @@ namespace OfficeDevPnP.PowerShell.Commands.Branding
                         formatter = XMLPnPSchemaFormatter.GetSpecificFormatter(XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_08);
                         break;
                     }
+                case XMLPnPSchemaVersion.V201512:
+                    {
+                        formatter =
+                            XMLPnPSchemaFormatter.GetSpecificFormatter(XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_12);
+                        break;
+                    }
             }
-            var _outputStream = formatter.ToFormattedTemplate(template);
-            StreamReader reader = new StreamReader(_outputStream);
-
-            return reader.ReadToEnd();
+            return formatter;
         }
 
-        private List<Core.Framework.Provisioning.Model.File> EnumerateFiles(string folder, string ctid, Hashtable properties)
+        private List<OfficeDevPnP.Core.Framework.Provisioning.Model.File> EnumerateFiles(string folder, string ctid, Hashtable properties)
         {
-            var files = new List<Core.Framework.Provisioning.Model.File>();
+            var files = new List<OfficeDevPnP.Core.Framework.Provisioning.Model.File>();
 
             DirectoryInfo dirInfo = new DirectoryInfo(folder);
 
@@ -234,7 +286,7 @@ namespace OfficeDevPnP.PowerShell.Commands.Branding
                 var unrootedPath = file.FullName.Substring(Folder.Length + 1);
                 var targetFolder = Path.Combine(TargetFolder, unrootedPath.LastIndexOf("\\") > -1 ? unrootedPath.Substring(0, unrootedPath.LastIndexOf("\\")) : "");
                 targetFolder = targetFolder.Replace('\\', '/');
-                var modelFile = new Core.Framework.Provisioning.Model.File()
+                var modelFile = new OfficeDevPnP.Core.Framework.Provisioning.Model.File()
                 {
                     Folder = targetFolder,
                     Overwrite = true,

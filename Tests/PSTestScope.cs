@@ -1,12 +1,12 @@
 ﻿using Microsoft.PowerShell.Commands;
-using OfficeDevPnP.PowerShell.Commands.Base;
+using SharePointPnP.PowerShell.Commands.Base;
 using System;
 using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 
-namespace OfficeDevPnP.PowerShell.Tests
+namespace SharePointPnP.PowerShell.Tests
 {
     public class PSTestScope : IDisposable
     {
@@ -41,6 +41,7 @@ namespace OfficeDevPnP.PowerShell.Tests
             var pipeLine = _runSpace.CreatePipeline();
             Command cmd = new Command("Set-ExecutionPolicy");
             cmd.Parameters.Add("ExecutionPolicy", "Unrestricted");
+            cmd.Parameters.Add("Scope", "Process");
             pipeLine.Commands.Add(cmd);
             pipeLine.Invoke();
 
@@ -56,10 +57,13 @@ namespace OfficeDevPnP.PowerShell.Tests
                 }
                 else
                 {
-                    if (!string.IsNullOrEmpty(Realm) && !string.IsNullOrEmpty("AppId") && !string.IsNullOrEmpty("AppSecret"))
+                    if (!string.IsNullOrEmpty("AppId") && !string.IsNullOrEmpty("AppSecret"))
                     {
                         // Use oAuth Token to authenticate
-                        cmd.Parameters.Add("Realm", Realm);
+                        if (!string.IsNullOrEmpty(Realm))
+                        {
+                            cmd.Parameters.Add("Realm", Realm);
+                        }
                         cmd.Parameters.Add("AppId", AppId);
                         cmd.Parameters.Add("AppSecret", AppSecret);
                     }
@@ -89,6 +93,15 @@ namespace OfficeDevPnP.PowerShell.Tests
             pipeLine.Commands.Add(cmd);
             return pipeLine.Invoke();
 
+        }
+
+        public Collection<PSObject> ExecuteScript(string script)
+        {
+            var pipeLine = _runSpace.CreatePipeline();
+
+            pipeLine.Commands.AddScript(script);
+
+            return pipeLine.Invoke();
         }
 
         public void Dispose()

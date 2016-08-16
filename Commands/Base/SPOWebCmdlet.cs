@@ -1,10 +1,10 @@
 ﻿using System;
-using OfficeDevPnP.PowerShell.Commands.Base;
-using OfficeDevPnP.PowerShell.Commands.Base.PipeBinds;
+using SharePointPnP.PowerShell.Commands.Base;
+using SharePointPnP.PowerShell.Commands.Base.PipeBinds;
 using System.Management.Automation;
 using Microsoft.SharePoint.Client;
 
-namespace OfficeDevPnP.PowerShell.Commands
+namespace SharePointPnP.PowerShell.Commands
 {
     public class SPOWebCmdlet : SPOCmdlet
     {
@@ -14,7 +14,7 @@ namespace OfficeDevPnP.PowerShell.Commands
         [Parameter(Mandatory = false, HelpMessage = "The web to apply the command to. Omit this parameter to use the current web.")]
         public WebPipeBind Web = new WebPipeBind();
 
-        internal Web SelectedWeb
+        protected Web SelectedWeb
         {
             get
             {

@@ -1,16 +1,14 @@
 ﻿using System.IO;
 using System.Management.Automation;
-using Microsoft.SharePoint.Client;
-using OfficeDevPnP.Core.Framework.Provisioning.Model;
-using OfficeDevPnP.PowerShell.CmdletHelpAttributes;
+using SharePointPnP.PowerShell.CmdletHelpAttributes;
 using OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml;
-using Resources = OfficeDevPnP.PowerShell.Commands.Properties.Resources;
+using Resources = SharePointPnP.PowerShell.Commands.Properties.Resources;
 using OfficeDevPnP.Core.Framework.Provisioning.Providers;
 
-namespace OfficeDevPnP.PowerShell.Commands.Branding
+namespace SharePointPnP.PowerShell.Commands.Branding
 {
     [Cmdlet(VerbsData.Convert, "SPOProvisioningTemplate")]
-    [CmdletHelp("Converts a provisioning template to a web",
+    [CmdletHelp("Converts a provisioning template to a other schema version",
         Category = CmdletHelpCategory.Branding)]
     [CmdletExample(
      Code = @"PS:> Convert-SPOProvisioningTemplate -Path template.xml",
@@ -83,17 +81,26 @@ namespace OfficeDevPnP.PowerShell.Commands.Branding
                         }
                     case XMLPnPSchemaVersion.V201505:
                         {
+#pragma warning disable CS0618 // Type or member is obsolete
                             formatter = XMLPnPSchemaFormatter.GetSpecificFormatter(XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_05);
+#pragma warning restore CS0618 // Type or member is obsolete
                             break;
                         }
                     case XMLPnPSchemaVersion.V201508:
                         {
+#pragma warning disable CS0618 // Type or member is obsolete
                             formatter = XMLPnPSchemaFormatter.GetSpecificFormatter(XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_08);
+#pragma warning restore CS0618 // Type or member is obsolete
                             break;
                         }
                     case XMLPnPSchemaVersion.V201512:
                         {
                             formatter = XMLPnPSchemaFormatter.GetSpecificFormatter(XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2015_12);
+                            break;
+                        }
+                    case XMLPnPSchemaVersion.V201605:
+                        {
+                            formatter = XMLPnPSchemaFormatter.GetSpecificFormatter(XMLConstants.PROVISIONING_SCHEMA_NAMESPACE_2016_05);
                             break;
                         }
                 }

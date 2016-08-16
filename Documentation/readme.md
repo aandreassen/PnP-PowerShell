@@ -5,11 +5,15 @@ Below you can find a list of all the available cmdlets. Many commands provide bu
 Get-Help Connect-SPOnline -Detailed
 ```
 
+##
+Cmdlet|Description
+:-----|:----------
+**[Convert&#8209;SPOFolderToProvisioningTemplate](ConvertSPOFolderToProvisioningTemplate.md)** |
 ##Apps
 Cmdlet|Description
 :-----|:----------
 **[Uninstall&#8209;SPOAppInstance](UninstallSPOAppInstance.md)** |Removes an app from a site
-**[Get&#8209;SPOAppInstance](GetSPOAppInstance.md)** |Returns a SharePoint AddIn Instance
+**[Get&#8209;SPOAppInstance](GetSPOAppInstance.md)** |Returns a SharePoint AddIn Instance in the site
 **[Import&#8209;SPOAppPackage](ImportSPOAppPackage.md)** |Adds a SharePoint Addin to a site
 ##Base Cmdlets
 Cmdlet|Description
@@ -41,10 +45,13 @@ Cmdlet|Description
 **[Set&#8209;SPOMinimalDownloadStrategy](SetSPOMinimalDownloadStrategy.md)** |Activates or deactivates the minimal downloading strategy.
 **[Add&#8209;SPONavigationNode](AddSPONavigationNode.md)** |Adds a menu item to either the quicklaunch or top navigation
 **[Remove&#8209;SPONavigationNode](RemoveSPONavigationNode.md)** |Removes a menu item from either the quicklaunch or top navigation
-**[Convert&#8209;SPOProvisioningTemplate](ConvertSPOProvisioningTemplate.md)** |Converts a provisioning template to a web
+**[Convert&#8209;SPOProvisioningTemplate](ConvertSPOProvisioningTemplate.md)** |Converts a provisioning template to a other schema version
 **[Apply&#8209;SPOProvisioningTemplate](ApplySPOProvisioningTemplate.md)** |Applies a provisioning template to a web
 **[Get&#8209;SPOProvisioningTemplate](GetSPOProvisioningTemplate.md)** |Generates a provisioning template from a web
 **[New&#8209;SPOProvisioningTemplateFromFolder](NewSPOProvisioningTemplateFromFolder.md)** |Generates a provisioning template from a given folder, including only files that are present in that folder
+**[Set&#8209;SPOProvisioningTemplateMetadata](SetSPOProvisioningTemplateMetadata.md)** |Sets metadata of a provisioning template
+**[Disable&#8209;SPOResponsiveUI](DisableSPOResponsiveUI.md)** |Disables the PnP Responsive UI implementation on a classic SharePoint Web
+**[Enable&#8209;SPOResponsiveUI](EnableSPOResponsiveUI.md)** |Enables the PnP Responsive UI implementation on a classic SharePoint Web
 **[Get&#8209;SPOTheme](GetSPOTheme.md)** |Returns the current theme/composed look of the current web.
 **[Set&#8209;SPOTheme](SetSPOTheme.md)** |Sets the theme of the current web.
 ##Content Types
@@ -56,12 +63,14 @@ Cmdlet|Description
 **[Remove&#8209;SPOContentTypeFromList](RemoveSPOContentTypeFromList.md)** |Removes a content type from a list
 **[Add&#8209;SPOContentTypeToList](AddSPOContentTypeToList.md)** |Adds a new content type to a list
 **[Set&#8209;SPODefaultContentTypeToList](SetSPODefaultContentTypeToList.md)** |Sets the default content type for a list
+**[Remove&#8209;SPOFieldFromContentType](RemoveSPOFieldFromContentType.md)** |Removes a site column from a content type
 **[Add&#8209;SPOFieldToContentType](AddSPOFieldToContentType.md)** |Adds an existing site column to a content type
 ##Document Sets
 Cmdlet|Description
 :-----|:----------
 **[Remove&#8209;SPOContentTypeFromDocumentSet](RemoveSPOContentTypeFromDocumentSet.md)** |Removes a content type from a document set
 **[Add&#8209;SPOContentTypeToDocumentSet](AddSPOContentTypeToDocumentSet.md)** |Adds a content type to a document set
+**[Add&#8209;SPODocumentSet](AddSPODocumentSet.md)** |Creates a new document set in a library.
 **[Set&#8209;SPODocumentSetField](SetSPODocumentSetField.md)** |Sets a site column from the avaiable content types to a document set
 **[Get&#8209;SPODocumentSetTemplate](GetSPODocumentSetTemplate.md)** |Retrieves a document set template
 ##Event Receivers
@@ -73,6 +82,7 @@ Cmdlet|Description
 ##Features
 Cmdlet|Description
 :-----|:----------
+**[New&#8209;SPOExtensbilityHandlerObject](NewSPOExtensbilityHandlerObject.md)** |Creates a ExtensibilityHandler Object, to be used by the Get-SPOProvisioningTemplate cmdlet
 **[Get&#8209;SPOFeature](GetSPOFeature.md)** |Returns all activated or a specific activated feature
 **[Disable&#8209;SPOFeature](DisableSPOFeature.md)** |Disables a feature
 **[Enable&#8209;SPOFeature](EnableSPOFeature.md)** |Enables a feature
@@ -98,6 +108,7 @@ Cmdlet|Description
 **[New&#8209;SPOList](NewSPOList.md)** |Creates a new list
 **[Set&#8209;SPOList](SetSPOList.md)** |Updates list settings
 **[Add&#8209;SPOListItem](AddSPOListItem.md)** |Adds an item to a list
+**[Remove&#8209;SPOListItem](RemoveSPOListItem.md)** |Deletes an item from a list
 **[Set&#8209;SPOListItem](SetSPOListItem.md)** |Updates a list item
 **[Get&#8209;SPOListItem](GetSPOListItem.md)** |Retrieves list items
 **[Set&#8209;SPOListPermission](SetSPOListPermission.md)** |Sets list permissions
@@ -121,6 +132,7 @@ Cmdlet|Description
 :-----|:----------
 **[Set&#8209;SPOSearchConfiguration](SetSPOSearchConfiguration.md)** |Sets the search configuration
 **[Get&#8209;SPOSearchConfiguration](GetSPOSearchConfiguration.md)** |Returns the search configuration
+**[Get&#8209;SPOSiteSearchQueryResults](GetSPOSiteSearchQueryResults.md)** |Executes a search query to retrieve indexed site collections
 ##Sites
 Cmdlet|Description
 :-----|:----------
@@ -147,7 +159,7 @@ Cmdlet|Description
 Cmdlet|Description
 :-----|:----------
 **[Set&#8209;SPOTenantSite](SetSPOTenantSite.md)** |Office365 only: Uses the tenant API to set site information.
-**[Get&#8209;SPOTenantSite](GetSPOTenantSite.md)** |Office365 only: Uses the tenant API to retrieve site information. 
+**[Get&#8209;SPOTenantSite](GetSPOTenantSite.md)** |Office365 only: Uses the tenant API to retrieve site information.
 **[Remove&#8209;SPOTenantSite](RemoveSPOTenantSite.md)** |Office365 only: Removes a site collection from the current tenant
 **[New&#8209;SPOTenantSite](NewSPOTenantSite.md)** |Creates a new site collection for the current tenant
 **[Get&#8209;SPOTimeZoneId](GetSPOTimeZoneId.md)** |Returns a time zone ID
@@ -157,7 +169,7 @@ Cmdlet|Description
 :-----|:----------
 **[Remove&#8209;SPOGroup](RemoveSPOGroup.md)** |Removes a group.
 **[Set&#8209;SPOGroup](SetSPOGroup.md)** |Updates a group
-**[New&#8209;SPOGroup](NewSPOGroup.md)** |Adds a user to the build-in Site User Info List and returns a user object
+**[New&#8209;SPOGroup](NewSPOGroup.md)** |Adds group to the Site Groups List and returns a group object
 **[Get&#8209;SPOGroup](GetSPOGroup.md)** |Returns a specific group or all groups.
 **[Set&#8209;SPOGroupPermissions](SetSPOGroupPermissions.md)** |Adds and/or removes permissions of a specific SharePoint group
 **[Get&#8209;SPOGroupPermissions](GetSPOGroupPermissions.md)** |Returns the permissions for a specific SharePoint group
@@ -193,7 +205,10 @@ Cmdlet|Description
 **[Add&#8209;SPOFile](AddSPOFile.md)** |Uploads a file to Web
 **[Set&#8209;SPOFileCheckedIn](SetSPOFileCheckedIn.md)** |Checks in a file
 **[Set&#8209;SPOFileCheckedOut](SetSPOFileCheckedOut.md)** |Checks out a file
+**[Ensure&#8209;SPOFolder](EnsureSPOFolder.md)** |Returns a folder given a site relative path, and will create it if it not exists.
 **[Add&#8209;SPOFolder](AddSPOFolder.md)** |Creates a folder within a parent folder
+**[Remove&#8209;SPOFolder](RemoveSPOFolder.md)** |Deletes a folder within a parent folder
+**[Get&#8209;SPOFolderItem](GetSPOFolderItem.md)** |List content in folder
 **[Set&#8209;SPOIndexedProperties](SetSPOIndexedProperties.md)** |Marks values of the propertybag to be indexed by search. Notice that this will overwrite the existing flags, e.g. only the properties you define with the cmdlet will be indexed.
 **[Remove&#8209;SPOIndexedProperty](RemoveSPOIndexedProperty.md)** |Removes a key from propertybag to be indexed by search. The key and it's value retain in the propertybag, however it will not be indexed anymore.
 **[Add&#8209;SPOIndexedProperty](AddSPOIndexedProperty.md)** |Marks the value of the propertybag key to be indexed by search.
@@ -203,11 +218,14 @@ Cmdlet|Description
 **[Remove&#8209;SPOPropertyBagValue](RemoveSPOPropertyBagValue.md)** |Removes a value from the property bag
 **[Set&#8209;SPOPropertyBagValue](SetSPOPropertyBagValue.md)** |Sets a property bag value
 **[Request&#8209;SPOReIndexWeb](RequestSPOReIndexWeb.md)** |Marks the web for full indexing during the next incremental crawl
+**[Get&#8209;SPORequestAccessEmails](GetSPORequestAccessEmails.md)** |Returns the request access e-mail addresses
+**[Set&#8209;SPORequestAccessEmails](SetSPORequestAccessEmails.md)** |Sets Request Access Emails on a web
 **[Get&#8209;SPOSubWebs](GetSPOSubWebs.md)** |Returns the subwebs
 **[Remove&#8209;SPOWeb](RemoveSPOWeb.md)** |Removes a subweb in the current web
 **[Get&#8209;SPOWeb](GetSPOWeb.md)** |Returns the current web object
 **[New&#8209;SPOWeb](NewSPOWeb.md)** |Creates a new subweb to the current web
 **[Set&#8209;SPOWeb](SetSPOWeb.md)** |Sets properties on a web
+**[Invoke&#8209;SPOWebAction](InvokeSPOWebAction.md)** |Executes operations on web, lists, list items.
 ##Workflows
 Cmdlet|Description
 :-----|:----------

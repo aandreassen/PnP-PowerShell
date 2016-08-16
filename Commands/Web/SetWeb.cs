@@ -1,8 +1,8 @@
 ﻿using System.Management.Automation;
 using Microsoft.SharePoint.Client;
-using OfficeDevPnP.PowerShell.CmdletHelpAttributes;
+using SharePointPnP.PowerShell.CmdletHelpAttributes;
 
-namespace OfficeDevPnP.PowerShell.Commands
+namespace SharePointPnP.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Set, "SPOWeb")]
     [CmdletHelp("Sets properties on a web",
@@ -17,6 +17,15 @@ namespace OfficeDevPnP.PowerShell.Commands
 
         [Parameter(Mandatory = false)]
         public string Title;
+
+        [Parameter(Mandatory = false)]
+        public string Description;
+
+        [Parameter(Mandatory = false)]
+        public string MasterUrl;
+
+        [Parameter(Mandatory = false)]
+        public string CustomMasterUrl;
 
         protected override void ExecuteCmdlet()
         {
@@ -35,6 +44,25 @@ namespace OfficeDevPnP.PowerShell.Commands
                 SelectedWeb.Title = Title;
                 SelectedWeb.Update();
             }
+
+            if (!string.IsNullOrEmpty(Description))
+            {
+                SelectedWeb.Description = Description;
+                SelectedWeb.Update();
+            }
+
+            if (!string.IsNullOrEmpty(MasterUrl))
+            {
+                SelectedWeb.MasterUrl = MasterUrl;
+                SelectedWeb.Update();
+            }
+
+            if (!string.IsNullOrEmpty(CustomMasterUrl))
+            {
+                SelectedWeb.CustomMasterUrl = CustomMasterUrl;
+                SelectedWeb.Update();
+            }
+
             ClientContext.ExecuteQueryRetry();
         }
     }

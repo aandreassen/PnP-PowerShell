@@ -1,17 +1,17 @@
 ﻿using Microsoft.SharePoint.Client;
 using OfficeDevPnP.Core.Diagnostics;
-using OfficeDevPnP.PowerShell.Commands.Enums;
+using SharePointPnP.PowerShell.Commands.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 
-namespace OfficeDevPnP.PowerShell.Commands.Base
+namespace SharePointPnP.PowerShell.Commands.Base
 {
     public class SPOnlineConnection
     {
         internal static List<ClientContext> ContextCache { get; set; }
-        internal static SPOnlineConnection CurrentConnection { get; set; }
+        public static SPOnlineConnection CurrentConnection { get; internal set; }
         public ConnectionType ConnectionType { get; protected set; }
         public int MinimalHealthScore { get; protected set; }
         public int RetryCount { get; protected set; }

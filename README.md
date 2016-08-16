@@ -1,4 +1,4 @@
-# OfficeDevPnP.PowerShell Commands #
+# SharePointPnP.PowerShell Commands #
 
 ### Summary ###
 This solution shows how you can build a library of PowerShell commands that act towards SharePoint Online. The commands use CSOM and can work against both SharePoint Online as SharePoint On-Premises.
@@ -16,7 +16,7 @@ In order to generate the Cmdlet help you need Windows Management Framework v4.0 
 ### Solution ###
 Solution | Author(s)
 ---------|----------
-OfficeDevPnP.PowerShell | Erwin van Hunen
+SharePointPnP.PowerShell | Erwin van Hunen
 
 ### Disclaimer ###
 **THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.**
@@ -38,24 +38,28 @@ If you main OS is Windows 10, you can run the following commands to install the 
 
 _SharePoint Online_
 ```powershell
-Install-Module OfficeDevPnP.PowerShell.V16.Commands
+Install-Module SharePointPnPPowerShellOnline
 ```
-or
 
-_SharePoint On-Premises_
+_SharePoint 2016_
 ```powershell
-Install-Module OfficeDevPnP.PowerShell.V15.Commands
+Install-Module SharePointPnPPowerShell2016
+```
+
+_SharePoint 2013_
+```powershell
+Install-Module SharePointPnPPowerShell2013
 ```
 
 Alternatively for installation on machines that have at least PowerShell v3 installed (you can find this out by opening PowerShell and running $host.version and Major should be above 3) you can run the below command which will install PowerShell Package Management and then install the PowerShell Modules from the PowerShell Gallery
 
 ```powershell
-Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/OfficeDev/PnP-PowerShell/master/Samples/Modules.Install/Install-OfficeDevPnPPowerShell.ps1')
+Invoke-Expression (New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/OfficeDev/PnP-PowerShell/master/Samples/Modules.Install/Install-SharePointPnPPowerShell.ps1')
 ```
 
 If you wish to see the commands that the above will run please see the files as stored in the below locations:
 * https://raw.githubusercontent.com/OfficeDev/PnP-PowerShell/master/Samples/Modules.Install/Install-PowerShellPackageMangement.ps1
-* https://raw.githubusercontent.com/OfficeDev/PnP-PowerShell/master/Samples/Modules.Install/Install-OfficeDevPnPPowerShellHelperModule.ps1
+* https://raw.githubusercontent.com/OfficeDev/PnP-PowerShell/master/Samples/Modules.Install/Install-SharePointPnPPowerShellHelperModule.ps1
 
 Once the above has been completed you can then start to use the PowerShell Modules
 
@@ -67,6 +71,11 @@ Update-Module
 
 This will automatically load the module after starting PowerShell 3.0.
 
+You can check the installed PnP-PowerShell versions with the following command:
+
+```powershell
+Get-Module OfficeDevPnP.Powershell.* -ListAvailable | Select-Object Name,Version | Sort-Object Version -Descending
+```
 
 ## HOW TO USE DURING DEVELOPMENT ##
 
@@ -113,3 +122,5 @@ to create a new connection, the cmdlet will resolve the credentials to use based
 # Contributing #
 
 If you want to contribute to this OfficeDevPnP PowerShel library, please [proceed here](CONTRIBUTING.md)
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.

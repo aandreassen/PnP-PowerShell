@@ -1,8 +1,8 @@
 ﻿using System.Management.Automation;
 using Microsoft.SharePoint.Client;
-using OfficeDevPnP.PowerShell.CmdletHelpAttributes;
+using SharePointPnP.PowerShell.CmdletHelpAttributes;
 
-namespace OfficeDevPnP.PowerShell.Commands
+namespace SharePointPnP.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Add, "SPOPublishingPage")]
     [CmdletHelp("Adds a publishing page",
@@ -13,7 +13,7 @@ namespace OfficeDevPnP.PowerShell.Commands
         [Alias("Name")]
         public string PageName = string.Empty;
 
-        [Parameter(Mandatory = true)]
+        [Parameter(Mandatory = true, HelpMessage = "The name of the page layout you want to use. Specify without the .aspx extension. So 'ArticleLeft' or 'BlankWebPartPage'")]
         public string PageTemplateName = null;
 
         [Parameter(Mandatory = false, ParameterSetName = "WithTitle")]

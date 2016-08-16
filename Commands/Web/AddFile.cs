@@ -2,9 +2,10 @@
 using System.IO;
 using System.Management.Automation;
 using Microsoft.SharePoint.Client;
-using OfficeDevPnP.PowerShell.CmdletHelpAttributes;
+using SharePointPnP.PowerShell.CmdletHelpAttributes;
+using OfficeDevPnP.Core.Utilities;
 
-namespace OfficeDevPnP.PowerShell.Commands
+namespace SharePointPnP.PowerShell.Commands
 {
     [Cmdlet(VerbsCommon.Add, "SPOFile")]
     [CmdletHelp("Uploads a file to Web", 
@@ -77,7 +78,7 @@ namespace OfficeDevPnP.PowerShell.Commands
                 }
             }
 
-            folder.UploadFile(new FileInfo(Path).Name, Path, true);
+            var file = folder.UploadFile(new FileInfo(Path).Name, Path, true);
 
             if (Checkout)
                 SelectedWeb.CheckInFile(fileUrl, CheckinType.MajorCheckIn, "");
@@ -87,6 +88,8 @@ namespace OfficeDevPnP.PowerShell.Commands
 
             if (Approve)
                 SelectedWeb.ApproveFile(fileUrl, PublishComment);
+
+            WriteObject(file);
         }
     }
 }

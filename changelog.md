@@ -1,4 +1,30 @@
-# OfficeDevPnP.PowerShell Changelog #
+# SharePointPnP.PowerShell Changelog #
+
+**2016-06-03**
+* Added Add-SPODocumentSet cmdlet
+
+**2016-06-02**
+* Added Enable-SPOResponsiveUI and Disable-SPOResponsiveUI cmdlets
+* Added -CreateDrive parameter to Connect-SPOnline cmdlet, allowing to create a virtual drive into a SharePoint site
+* Added Invoke-SPOWebAction cmdlet
+
+**2016-05-09**
+* Namespace, Assembly and Project rename from OfficeDevPnP.PowerShell to SharePointPnP.PowerShell
+
+**2016-04-08**
+* Added -ExtensibilityHandlers parameter to Get-SPOPRovisioningTemplate
+
+**2016-03-11**
+* Added List parameter to Get-SPOContentType, allowing to retrieve the ContentTypes added to a list.
+
+**2016-03-08**
+* Added Remove-SPOListItem
+* Updated Get-SPOWeb and Get-SPOSubWebs to include ServerRelativeUrl
+* Added Ensure-SPOFolder cmdlet
+
+**2016-03-07**
+* Added Remove-SPOFieldFromContentType cmdlet
+* Added Get-SPOSiteSearchQueryResults cmdlet
 
 **2016-02-04**
 * Added -PersistPublishingFiles and -IncludeNativePublishingFiles parameters to Get-SPOProvisioningTemplate

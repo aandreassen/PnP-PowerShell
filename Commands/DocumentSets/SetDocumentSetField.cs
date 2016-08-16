@@ -1,26 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.SharePoint.Client;
-using Microsoft.SharePoint.Client.DocumentSet;
-using OfficeDevPnP.PowerShell.CmdletHelpAttributes;
-using OfficeDevPnP.PowerShell.Commands.Base.PipeBinds;
-using OfficeDevPnP.PowerShell.Commands.Enums;
+using SharePointPnP.PowerShell.CmdletHelpAttributes;
+using SharePointPnP.PowerShell.Commands.Base.PipeBinds;
 
-namespace OfficeDevPnP.PowerShell.Commands.DocumentSets
+namespace SharePointPnP.PowerShell.Commands.DocumentSets
 {
     [Cmdlet(VerbsCommon.Set, "SPODocumentSetField")]
     [CmdletHelp("Sets a site column from the avaiable content types to a document set", 
         Category = CmdletHelpCategory.DocumentSets)]
     [CmdletExample(
-        Code = @"PS:> Set-SPODocumentSetField -Field ""Test Field"" -DocumentSet ""Test Document Set"" -SetAsSharedField -SetAsWelcomePageField",
+        Code = @"PS:> Set-SPODocumentSetField -Field ""Test Field"" -DocumentSet ""Test Document Set"" -SetSharedField -SetWelcomePageField",
         Remarks = "This will set the field, available in one the available content types, as a Shared Field and as a Welcome Page Field.",
         SortOrder = 1)]
     [CmdletExample(
-        Code = @"PS:> Set-SPODocumentSetField -Field ""Test Field"" -DocumentSet ""Test Document Set"" -RemoveAsSharedField -RemoveAsWelcomePageField",
+        Code = @"PS:> Set-SPODocumentSetField -Field ""Test Field"" -DocumentSet ""Test Document Set"" -RemoveSharedField -RemoveWelcomePageField",
         Remarks = "This will remove the field, available in one the available content types, as a Shared Field and as a Welcome Page Field.",
         SortOrder = 1)]
     public class SetFieldInDocumentSet : SPOWebCmdlet

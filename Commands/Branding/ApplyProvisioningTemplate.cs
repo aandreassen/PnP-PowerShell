@@ -1,21 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.SharePoint.Client;
 using OfficeDevPnP.Core.Framework.Provisioning.Model;
-using OfficeDevPnP.PowerShell.CmdletHelpAttributes;
+using SharePointPnP.PowerShell.CmdletHelpAttributes;
 using OfficeDevPnP.Core.Framework.Provisioning.Providers.Xml;
-using OfficeDevPnP.Core.Utilities;
-using System.Xml.Linq;
 using OfficeDevPnP.Core.Framework.Provisioning.Connectors;
 using OfficeDevPnP.Core.Framework.Provisioning.ObjectHandlers;
 using System.Collections;
+using System.Linq;
+using OfficeDevPnP.Core.Framework.Provisioning.Providers;
 
-namespace OfficeDevPnP.PowerShell.Commands.Branding
+namespace SharePointPnP.PowerShell.Commands.Branding
 {
     [Cmdlet("Apply", "SPOProvisioningTemplate")]
     [CmdletHelp("Applies a provisioning template to a web",
@@ -43,9 +39,27 @@ For instance with the example above, specifying {parameter:ListTitle} in your te
      Remarks = @"Applies a provisioning template in XML format to the current web. It will only apply the lists and site security part of the template.",
      SortOrder = 4)]
 
+    [CmdletExample(
+     Code = @"PS:> Apply-SPOProvisioningTemplate -Path template.pnp",
+     Remarks = @"Applies a provisioning template from a pnp package to the current web.",
+     SortOrder = 5)]
+
+    [CmdletExample(
+     Code = @"PS:> Apply-SPOProvisioningTemplate -Path https://tenant.sharepoint.com/sites/templatestorage/Documents/template.pnp",
+     Remarks = @"Applies a provisioning template from a pnp package stored in a library to the current web.",
+     SortOrder = 6)]
+
+    [CmdletExample(
+        Code = @"
+PS:> $handler1 = New-SPOExtensibilityHandlerObject -Assembly Contoso.Core.Handlers -Type Contoso.Core.Handlers.MyExtensibilityHandler1
+PS:> $handler2 = New-SPOExtensibilityHandlerObject -Assembly Contoso.Core.Handlers -Type Contoso.Core.Handlers.MyExtensibilityHandler1
+PS:> Apply-SPOProvisioningTemplate -Path NewTemplate.xml -ExtensibilityHandlers $handler1,$handler2",
+        Remarks = @"This will create two new ExtensibilityHandler objects that are run while provisioning the template",
+        SortOrder = 7)]
+
     public class ApplyProvisioningTemplate : SPOWebCmdlet
     {
-        [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ValueFromPipeline = true, HelpMessage = "Path to the xml file containing the provisioning template.")]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ValueFromPipeline = true, HelpMessage = "Path to the xml or pnp file containing the provisioning template.")]
         public string Path;
 
         [Parameter(Mandatory = false, HelpMessage = "Root folder where resources/files that are being referenced in the template are located. If not specified the same folder as where the provisioning template is located will be used.")]
@@ -63,73 +77,123 @@ For instance with the example above, specifying {parameter:ListTitle} in your te
         [Parameter(Mandatory = false, HelpMessage = "Allows you to run all handlers, excluding the ones specified.")]
         public Handlers ExcludeHandlers;
 
+        [Parameter(Mandatory = false, HelpMessage = "Allows you to specify ExtensbilityHandlers to execute while applying a template")]
+        public ExtensibilityHandler[] ExtensibilityHandlers;
+
+        [Parameter(Mandatory = false, HelpMessage = "Allows you to specify ITemplateProviderExtension to execute while applying a template.")]
+        public ITemplateProviderExtension[] TemplateProviderExtensions;
+
         protected override void ExecuteCmdlet()
         {
             SelectedWeb.EnsureProperty(w => w.Url);
-
-            if (!System.IO.Path.IsPathRooted(Path))
+            bool templateFromFileSystem = !Path.ToLower().StartsWith("http");
+            FileConnectorBase fileConnector;
+            string templateFileName = System.IO.Path.GetFileName(Path);
+            if (templateFromFileSystem)
             {
-                Path = System.IO.Path.Combine(SessionState.Path.CurrentFileSystemLocation.Path, Path);
-            }
-            if (!string.IsNullOrEmpty(ResourceFolder))
-            {
-                if (System.IO.Path.IsPathRooted(ResourceFolder))
+                if (!System.IO.Path.IsPathRooted(Path))
                 {
-                    ResourceFolder = System.IO.Path.Combine(SessionState.Path.CurrentFileSystemLocation.Path, ResourceFolder);
+                    Path = System.IO.Path.Combine(SessionState.Path.CurrentFileSystemLocation.Path, Path);
                 }
-            }
-
-            FileInfo fileInfo = new FileInfo(Path);
-
-            XMLTemplateProvider provider =
-                new XMLFileSystemTemplateProvider(fileInfo.DirectoryName, "");
-
-            var provisioningTemplate = provider.GetTemplate(fileInfo.Name);
-
-            if (provisioningTemplate != null)
-            {
-                FileSystemConnector fileSystemConnector = null;
-                if (string.IsNullOrEmpty(ResourceFolder))
+                if (!string.IsNullOrEmpty(ResourceFolder))
                 {
-                    fileSystemConnector = new FileSystemConnector(fileInfo.DirectoryName, "");
+                    if (!System.IO.Path.IsPathRooted(ResourceFolder))
+                    {
+                        ResourceFolder = System.IO.Path.Combine(SessionState.Path.CurrentFileSystemLocation.Path,
+                            ResourceFolder);
+                    }
+                }
+                FileInfo fileInfo = new FileInfo(Path);
+                fileConnector = new FileSystemConnector(fileInfo.DirectoryName, "");
+            }
+            else
+            {                
+                Uri fileUri = new Uri(Path);
+                var webUrl = Microsoft.SharePoint.Client.Web.WebUrlFromFolderUrlDirect(this.ClientContext, fileUri);
+                var templateContext = this.ClientContext.Clone(webUrl.ToString());
+
+                string library = Path.ToLower().Replace(templateContext.Url.ToLower(), "").TrimStart('/');
+                int idx = library.IndexOf("/");
+                library = library.Substring(0, idx);
+                fileConnector = new SharePointConnector(templateContext, templateContext.Url, library);
+            }
+            XMLTemplateProvider provider = null;
+            ProvisioningTemplate provisioningTemplate = null;
+            Stream stream = fileConnector.GetFileStream(templateFileName);
+            var isOpenOfficeFile = IsOpenOfficeFile(stream);
+            if (isOpenOfficeFile)
+            {
+                provider = new XMLOpenXMLTemplateProvider(new OpenXMLConnector(templateFileName, fileConnector));
+                templateFileName = templateFileName.Substring(0, templateFileName.LastIndexOf(".")) + ".xml";
+            }
+            else
+            {
+                if (templateFromFileSystem)
+                {
+                    provider = new XMLFileSystemTemplateProvider(fileConnector.Parameters[FileConnectorBase.CONNECTIONSTRING] + "", "");
                 }
                 else
                 {
-                    fileSystemConnector = new FileSystemConnector(ResourceFolder, "");
+                    throw new NotSupportedException("Only .pnp package files are supported from a SharePoint library");
                 }
-                provisioningTemplate.Connector = fileSystemConnector;
+            }
+            provisioningTemplate = provider.GetTemplate(templateFileName, TemplateProviderExtensions);
 
-                if (Parameters != null)
+            if (provisioningTemplate == null) return;
+
+            if (isOpenOfficeFile)
+            {
+                provisioningTemplate.Connector = provider.Connector;
+            }
+            else
+            {
+                if (ResourceFolder != null)
                 {
-                    foreach (var parameter in Parameters.Keys)
+                    var fileSystemConnector = new FileSystemConnector(ResourceFolder, "");
+                    provisioningTemplate.Connector = fileSystemConnector;
+                }
+                else
+                {
+                    provisioningTemplate.Connector = provider.Connector;
+                }
+            }
+
+            if (Parameters != null)
+            {
+                foreach (var parameter in Parameters.Keys)
+                {
+                    if (provisioningTemplate.Parameters.ContainsKey(parameter.ToString()))
                     {
-                        if (provisioningTemplate.Parameters.ContainsKey(parameter.ToString()))
-                        {
-                            provisioningTemplate.Parameters[parameter.ToString()] = Parameters[parameter].ToString();
-                        }
-                        else
-                        {
-                            provisioningTemplate.Parameters.Add(parameter.ToString(), Parameters[parameter].ToString());
-                        }
+                        provisioningTemplate.Parameters[parameter.ToString()] = Parameters[parameter].ToString();
+                    }
+                    else
+                    {
+                        provisioningTemplate.Parameters.Add(parameter.ToString(), Parameters[parameter].ToString());
                     }
                 }
+            }
 
-                var applyingInformation = new ProvisioningTemplateApplyingInformation();
+            var applyingInformation = new ProvisioningTemplateApplyingInformation();
 
-                if (this.MyInvocation.BoundParameters.ContainsKey("Handlers"))
+            if (this.MyInvocation.BoundParameters.ContainsKey("Handlers"))
+            {
+                applyingInformation.HandlersToProcess = Handlers;
+            }
+            if (this.MyInvocation.BoundParameters.ContainsKey("ExcludeHandlers"))
+            {
+                foreach (var handler in (OfficeDevPnP.Core.Framework.Provisioning.Model.Handlers[])Enum.GetValues(typeof(Handlers)))
                 {
-                    applyingInformation.HandlersToProcess = Handlers;
-                }
-                if (this.MyInvocation.BoundParameters.ContainsKey("ExcludeHandlers"))
-                {
-                    foreach (var handler in (OfficeDevPnP.Core.Framework.Provisioning.Model.Handlers[])Enum.GetValues(typeof(Handlers)))
+                    if (!ExcludeHandlers.Has(handler) && handler != Handlers.All)
                     {
-                        if (!ExcludeHandlers.Has(handler) && handler != Handlers.All)
-                        {
-                            Handlers = Handlers | handler;
-                        }
+                        Handlers = Handlers | handler;
                     }
-                    applyingInformation.HandlersToProcess = Handlers;
+                }
+                applyingInformation.HandlersToProcess = Handlers;
+            }
+
+                if (ExtensibilityHandlers != null)
+                {
+                    applyingInformation.ExtensibilityHandlers = ExtensibilityHandlers.ToList<ExtensibilityHandler>();
                 }
 
                 applyingInformation.ProgressDelegate = (message, step, total) =>
@@ -137,17 +201,35 @@ For instance with the example above, specifying {parameter:ListTitle} in your te
                     WriteProgress(new ProgressRecord(0, string.Format("Applying template to {0}", SelectedWeb.Url), message) { PercentComplete = (100 / total) * step });
                 };
 
-                applyingInformation.MessagesDelegate = (message, type) =>
+            applyingInformation.MessagesDelegate = (message, type) =>
+            {
+                if (type == ProvisioningMessageType.Warning)
                 {
-                    if (type == ProvisioningMessageType.Warning)
-                    {
-                        WriteWarning(message);
-                    }
-                };
+                    WriteWarning(message);
+                }
+            };
 
-                applyingInformation.OverwriteSystemPropertyBagValues = OverwriteSystemPropertyBagValues;
-                SelectedWeb.ApplyProvisioningTemplate(provisioningTemplate, applyingInformation);
+            applyingInformation.OverwriteSystemPropertyBagValues = OverwriteSystemPropertyBagValues;
+            SelectedWeb.ApplyProvisioningTemplate(provisioningTemplate, applyingInformation);
+        }
+
+        private bool IsOpenOfficeFile(Stream stream)
+        {
+            bool istrue = false;
+            // SIG 50 4B 03 04 14 00
+
+            byte[] bytes = new byte[6];
+            int n = stream.Read(bytes, 0, 6);
+            var signature = string.Empty;
+            foreach (var b in bytes)
+            {
+                signature += b.ToString("X2");
             }
+            if (signature == "504B03041400")
+            {
+                istrue = true;
+            }
+            return istrue;
         }
     }
 }
